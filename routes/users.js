@@ -25,8 +25,6 @@ router.post('/adduser', function(req, res) {
 	});
 });
 
-module.exports = router;
-
 /*
  * DELETE to deleteuser.
  */
@@ -38,3 +36,20 @@ router.delete('/deleteuser/:id', function(req, res) {
         res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
     });
 });
+
+/*
+ * PUT to edituser.
+ */
+router.put('/edituser/:id', function(req, res) {
+	var db = req.db;
+	var collection = db.get('userlist');
+	var userToEdit = req.params.id;
+	console.log(userToEdit)
+	collection.update(userToEdit, req.body, function(err, result) {
+		res.send(
+			(err === null) ? { msg: '' } : { msg: err }
+		);
+	});
+});
+
+module.exports = router;

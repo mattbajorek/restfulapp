@@ -1,5 +1,6 @@
 // Userlist data array for filling in info box
 var userListData = [];
+var userID;
 
 // DOM Ready =============================================================
 $(document).ready(function() {
@@ -15,6 +16,12 @@ $(document).ready(function() {
 
   // Delete User link click
   $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+
+  // Edit User link click
+  $('#userList table tbody').on('click', 'td a.linkedituser', editUser);
+
+  // Edit User button click
+  $('#btnEditUser').on('click', sendEditUser);
 
 });
 
@@ -38,6 +45,7 @@ function populateTable() {
       tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '">' + this.username + '</a></td>';
       tableContent += '<td>' + this.email + '</td>';
       tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
+      tableContent += '<td><a href="#" class="linkedituser" rel-name="' + this.username + '">edit</a></td>';
       tableContent += '</tr>';
     });
 
@@ -47,13 +55,13 @@ function populateTable() {
 };
 
 // Show User Info
-function showUserInfo(event) {
+function showUserInfo($this) {
 
-  // Prevent Link from Firing
-  event.preventDefault();
+  console.log($this);
+  console.log($this.type);
 
   // Retrieve username from link rel attribute
-  var thisUserName = $(this).attr('rel');
+  var thisUserName = $this.type === 'click' ? $(this).attr('rel') : $this;
 
   // Get Index of object based on id value
   var arrayPosition = userListData.map(function(arrayItem) {
@@ -69,10 +77,13 @@ function showUserInfo(event) {
   $('#userInfoGender').text(thisUserObject.gender);
   $('#userInfoLocation').text(thisUserObject.location);
 
+  return false;
+
 };
 
 // Add User
 function addUser(event) {
+
   event.preventDefault();
 
   // Super basic validation - increase errorCount variable if any fields are blank
@@ -162,3 +173,98 @@ function deleteUser(event) {
   }
 
 };
+
+// Edit User
+function editUser(event) {
+
+  event.preventDefault();
+
+  // Show edit user form
+  $('#editUser').removeClass('hidden');
+
+  // Retrieve username from link rel attribute
+  var thisUserName = $(this).attr('rel-name');
+
+  // Get Index of object based on id value
+  var arrayPosition = userListData.map(function(arrayItem) {
+    return arrayItem.username;
+  }).indexOf(thisUserName);
+
+  // Get our User Object
+  var thisUserObject = userListData[arrayPosition];
+
+  // Save User ID
+  userID = thisUserObject._id;
+
+  //Populate Info Box
+  $('#editUser fieldset input#inputUserName').val(thisUserObject.username);
+  $('#editUser fieldset input#inputUserEmail').val(thisUserObject.email);
+  $('#editUser fieldset input#inputUserFullname').val(thisUserObject.fullname);
+  $('#editUser fieldset input#inputUserAge').val(thisUserObject.age);
+  $('#editUser fieldset input#inputUserLocation').val(thisUserObject.location);
+  $('#editUser fieldset input#inputUserGender').val(thisUserObject.gender);
+
+};
+
+// Send edit user data
+function sendEditUser(event) {
+
+  event.preventDefault();
+
+  // Super basic validation - increase errorCount variable if any fields are blank
+  var errorCount = 0;
+  $('#editUser input').each(function(index, val) {
+    if ($(this).val() === '') {
+      errorCount++;
+    }
+  });
+
+  // Check and make sure errorCount's still at zero
+  if (errorCount === 0) {
+
+    var username = $('#editUser fieldset input#inputUserName').val();
+
+    // If it is, compile all user info into one object
+    var editUser = {
+      'username': username,
+      'email': $('#editUser fieldset input#inputUserEmail').val(),
+      'fullname': $('#editUser fieldset input#inputUserFullname').val(),
+      'age': $('#editUser fieldset input#inputUserAge').val(),
+      'location': $('#editUser fieldset input#inputUserLocation').val(),
+      'gender': $('#editUser fieldset input#inputUserGender').val()
+    }
+
+    // Use AJAX to post the object to our adduser service
+    $.ajax({
+      type: 'PUT',
+      data: editUser,
+      url: '/users/edituser/' + userID,
+      dataType: 'JSON'
+    }).done(function(response) {
+
+      // Check for successful (blank) response
+      if (response.msg === '') {
+
+        // Clear the form inputs
+        $('#editUser fieldset input').val('');
+        $('#editUser').addClass('hidden');
+
+        // Update the table
+        populateTable();
+
+        // Show updated user info
+        showUserInfo(username);
+
+      } else {
+
+        // If something goes wrong, alert the error message that our service returned
+        alert('Error: ' + response.msg);
+
+      }
+    });
+  } else {
+    // If errorCount is more than 0, error out
+    alert('Please fill in all fields');
+    return false;
+  }
+}

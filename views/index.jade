@@ -29,6 +29,7 @@ block content
           th UserName
           th Email
           th Delete?
+          th Edit?
         tbody
 
     // ADD USER
@@ -45,3 +46,19 @@ block content
         input#inputUserGender(type='text', placeholder='gender')
         br
         button#btnAddUser Add User
+
+    // EDIT USER
+    br
+    #editUser.hidden
+      h2 Edit User
+      fieldset
+        input#inputUserName(type='text', placeholder='Username')
+        input#inputUserEmail(type='text', placeholder='Email')
+        br
+        input#inputUserFullname(type='text', placeholder='Full Name')
+        input#inputUserAge(type='text', placeholder='Age')
+        br
+        input#inputUserLocation(type='text', placeholder='Location')
+        input#inputUserGender(type='text', placeholder='gender')
+        br
+        button#btnEditUser Edit User
